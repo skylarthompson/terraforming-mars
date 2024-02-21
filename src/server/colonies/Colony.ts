@@ -29,6 +29,8 @@ import {sum} from '../../common/utils/utils';
 import {message} from '../logs/MessageBuilder';
 
 export enum ShouldIncreaseTrack { YES, NO, ASK }
+export type BonusSource = 'build' | 'trade' | 'colony';
+
 export abstract class Colony implements IColony {
   // Players can't build colonies on Miranda until someone has played an Animal card.
   // isActive is the gateway for that action and any other card with that type of constraint
@@ -79,9 +81,9 @@ export abstract class Colony implements IColony {
   public addColony(player: IPlayer, options?: {giveBonusTwice: boolean}): void {
     player.game.log('${0} built a colony on ${1}', (b) => b.player(player).colony(this));
 
-    this.giveBonus(player, this.metadata.buildType, this.metadata.buildQuantity[this.colonies.length], this.metadata.buildResource);
+    this.giveBonus(player, 'build', this.metadata.buildType, this.metadata.buildQuantity[this.colonies.length], this.metadata.buildResource);
     if (options?.giveBonusTwice === true) { // Vital Colony hook.
-      this.giveBonus(player, this.metadata.buildType, this.metadata.buildQuantity[this.colonies.length], this.metadata.buildResource);
+      this.giveBonus(player, 'build', this.metadata.buildType, this.metadata.buildQuantity[this.colonies.length], this.metadata.buildResource);
     }
 
     this.colonies.push(player.id);
@@ -149,7 +151,7 @@ export abstract class Colony implements IColony {
   private handleTrade(player: IPlayer, options: TradeOptions) {
     const resource = Array.isArray(this.metadata.tradeResource) ? this.metadata.tradeResource[this.trackPosition] : this.metadata.tradeResource;
 
-    this.giveBonus(player, this.metadata.tradeType, this.metadata.tradeQuantity[this.trackPosition], resource);
+    this.giveBonus(player, 'trade', this.metadata.tradeType, this.metadata.tradeQuantity[this.trackPosition], resource);
 
     // !== false because default is true.
     if (options.giveColonyBonuses !== false) {
@@ -174,7 +176,7 @@ export abstract class Colony implements IColony {
     return this.giveBonus(player, this.metadata.colonyBonusType, this.metadata.colonyBonusQuantity, this.metadata.colonyBonusResource, isGiveColonyBonus);
   }
 
-  private giveBonus(player: IPlayer, bonusType: ColonyBenefit, quantity: number, resource: Resource | undefined, isGiveColonyBonus: boolean = false): undefined | PlayerInput {
+  protected giveBonus(player: IPlayer, source: BonusSource, bonusType: ColonyBenefit, quantity: number, resource: Resource | undefined, isGiveColonyBonus: boolean = false): undefined | PlayerInput {
     const game = player.game;
 
     let action: undefined | DeferredAction<any> = undefined;
