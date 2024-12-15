@@ -6,9 +6,10 @@ import {SelectOption} from '../inputs/SelectOption';
 import {ICloneTagCard} from '../cards/pathfinders/ICloneTagCard';
 import {IProjectCard} from '../cards/IProjectCard';
 import {isPlanetaryTag, PLANETARY_TAGS, PlanetaryTag} from '../pathfinders/PathfindersData';
-import {intersection} from '../../common/utils/utils';
+import {inplaceRemove, intersection} from '../../common/utils/utils';
 import {message} from '../logs/MessageBuilder';
 import {Message} from '../../common/logs/Message';
+import {Tag} from '../../common/cards/Tag';
 
 /**
  * Declare what tag a new card has. Must occur before anything else, including
@@ -27,12 +28,18 @@ export class DeclareCloneTag extends DeferredAction<PlanetaryTag> {
   }
 
   public execute() {
+    const game = this.player.game;
     // This finds all the valid tags in the game.
     // It also relies in `intersection` preserving order of the first array
     // which defines the order of tags in SelectOption.
     const tags = intersection(
       PLANETARY_TAGS,
-      this.player.game.tags.filter(isPlanetaryTag));
+      game.tags.filter(isPlanetaryTag));
+
+    // TODO(kberg): Include Venus when the tag is included, not necessarily the expansion.
+    if (!game.gameOptions.venusNextExtension) {
+      inplaceRemove(tags, Tag.VENUS);
+    }
 
     const options = tags.map((tag) => {
       return new SelectOption(tag, 'Choose').andThen(() => {

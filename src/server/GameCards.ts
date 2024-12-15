@@ -23,6 +23,8 @@ import {ICeoCard} from './cards/ceos/ICeoCard';
 import {PRELUDE2_CARD_MANIFEST} from './cards/prelude2/Prelude2CardManifest';
 import {STAR_WARS_CARD_MANIFEST} from './cards/starwars/StarwarsCardManifest';
 import {UNDERWORLD_CARD_MANIFEST} from './cards/underworld/UnderworldCardManifest';
+import {Tag, ALL_TAGS} from '../common/cards/Tag';
+import {intersection} from '../common/utils/utils';
 
 /**
  * Returns the cards available to a game based on its `GameOptions`.
@@ -91,6 +93,9 @@ export class GameCards {
     return this.addCustomCards(cards, this.gameOptions.customCorporationsList);
   }
   public getPreludeCards() {
+    if (this.gameOptions.preludeExtension === false) {
+      return [];
+    }
     let preludes = this.getCards<IPreludeCard>('preludeCards');
     // https://github.com/terraforming-mars/terraforming-mars/issues/2833
     // Make Valley Trust playable even when Preludes is out of the game
@@ -112,6 +117,29 @@ export class GameCards {
     let ceos = this.getCards<ICeoCard>('ceoCards');
     ceos = this.addCustomCards(ceos, this.gameOptions.customCeos);
     return ceos;
+  }
+
+  /**
+   *
+   * In order.
+   */
+  public getTags(): ReadonlyArray<Tag> {
+    const tags = new Set<Tag>();
+    for (const cards of [
+      this.getProjectCards(),
+      this.getCorporationCards(),
+      this.getPreludeCards(),
+      this.getCeoCards()]) {
+      for (const card of cards) {
+        for (const tag of card.tags) {
+          tags.add(tag);
+        }
+      }
+    }
+    // Cards never explicitly have an event tag.
+    tags.add(Tag.EVENT);
+
+    return intersection(ALL_TAGS, Array.from(tags.values()));
   }
 
   private addCustomCards<T extends ICard>(cards: Array<T>, customList: Array<CardName> = []): Array<T> {

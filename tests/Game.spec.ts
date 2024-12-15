@@ -713,7 +713,6 @@ describe('Game', () => {
       'monsInsuranceOwner',
       'resettable',
       'rng',
-      'tags',
     ];
     const serializedValuesNotInGame: Array<keyof SerializedGame> = [
       'seed',

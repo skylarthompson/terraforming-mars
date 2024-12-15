@@ -95,17 +95,30 @@ describe('Tags', function() {
   // cardTagCount()
   // multipleCount
 
-  const tagsInGameRuns: ReadonlyArray<{options: Partial<GameOptions>, expected: number}> = [
+  const tagsInGameRuns = [
     {options: {}, expected: 10},
     {options: {venusNextExtension: true}, expected: 11},
     {options: {coloniesExtension: true}, expected: 10},
-    {options: {pathfindersExpansion: true}, expected: 11},
+    {options: {pathfindersExpansion: true}, expected: 12}, // Pathfinders includes Mars and Venus
+    {
+      options: {
+        // Play with Pathfinders, but exclude all the Venus cards.
+        pathfindersExpansion: true,
+        bannedCards: [
+          CardName.CULTIVATION_OF_VENUS, CardName.DYSON_SCREENS, CardName.EXPEDITION_TO_THE_SURFACE_VENUS,
+          CardName.FLOATER_URBANISM, CardName.TERRAFORMING_CONTROL_STATION, CardName.THINK_TANK, CardName.VENERA_BASE,
+          CardName.AMBIENT, CardName.ROBIN_HAULINGS,
+        ],
+      },
+      // One fewer tag.
+      expected: 11,
+    },
     {options: {venusNextExtension: true, pathfindersExpansion: true}, expected: 12},
     {options: {moonExpansion: true}, expected: 11},
   ] as const;
   for (const run of tagsInGameRuns) {
     it('tagsInGame ' + JSON.stringify(run), () => {
-      const [_, player] = testGame(1, run.options);
+      const [_, player] = testGame(1, run.options as Partial<GameOptions>);
       expect(player.tags.tagsInGame()).eq(run.expected);
     });
   }

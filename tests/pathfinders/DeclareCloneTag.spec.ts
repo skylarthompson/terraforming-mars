@@ -11,40 +11,39 @@ import {IGame} from '../../src/server/IGame';
 import {CrewTraining} from '../../src/server/cards/pathfinders/CrewTraining';
 import {MartianZoo} from '../../src/server/cards/colonies/MartianZoo';
 
-describe('DeclareCloneTag', function() {
+describe('DeclareCloneTag', () => {
   let player: TestPlayer;
   let game: IGame;
   let card: LobbyHalls;
   let tag: Tag;
 
-  beforeEach(function() {
+  beforeEach(() => {
     [game, player] = testGame(1, {pathfindersExpansion: true});
     card = new LobbyHalls();
   });
 
-  it('sanity', function() {
-    const action = new DeclareCloneTag(player, card).andThen((t) => tag = t);
+  const sanityRuns = [
+    {idx: 0, tag: Tag.EARTH},
+    {idx: 1, tag: Tag.MARS},
+    {idx: 2, tag: Tag.JOVIAN},
+  ];
+  for (const run of sanityRuns) {
+    it('sanity ' + JSON.stringify(run), () => {
+      const action = new DeclareCloneTag(player, card).andThen((t) => tag = t);
 
-    const options = cast(action.execute(), OrOptions);
-    const orOptions = cast(options.options, Array<SelectOption>);
+      const options = cast(action.execute(), OrOptions);
+      const orOptions = cast(options.options, Array<SelectOption>);
 
-    expect(orOptions).has.length(3);
-    expect(card.cloneTag).eq(Tag.CLONE);
+      expect(orOptions).has.length(3);
+      expect(card.cloneTag).eq(Tag.CLONE);
 
-    orOptions[0].cb(undefined);
-    expect(card.cloneTag).eq(Tag.EARTH);
-    expect(tag).eq(Tag.EARTH);
+      orOptions[run.idx].cb(undefined);
+      expect(card.cloneTag).eq(run.tag);
+      expect(tag).eq(run.tag);
+    });
+  }
 
-    orOptions[1].cb(undefined);
-    expect(card.cloneTag).eq(Tag.MARS);
-    expect(tag).eq(Tag.MARS);
-
-    orOptions[2].cb(undefined);
-    expect(card.cloneTag).eq(Tag.JOVIAN);
-    expect(tag).eq(Tag.JOVIAN);
-  });
-
-  it('clone tag with expansions', function() {
+  it('clone tag with expansions', () => {
     const [/* game */, player] = testGame(1, {venusNextExtension: true, moonExpansion: true, pathfindersExpansion: true});
 
     const action = new DeclareCloneTag(player, card).andThen((t) => tag = t);
@@ -90,9 +89,9 @@ describe('DeclareCloneTag', function() {
     const action = cast(game.deferredActions.pop(), DeclareCloneTag);
     const options = cast(action.execute(), OrOptions);
 
-    expect(options.options[0].title).to.match(/earth/);
-
-    options.options[0].cb();
+    const titles = options.options.map((o) => o.title as String);
+    const idx = titles.indexOf('earth');
+    options.options[idx].cb();
 
     runAllActions(game);
 

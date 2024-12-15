@@ -6,9 +6,10 @@ import {CardName} from '../src/common/cards/CardName';
 import {CardManifest} from '../src/server/cards/ModuleManifest';
 import {DEFAULT_GAME_OPTIONS, GameOptions} from '../src/server/game/GameOptions';
 import {toName} from '../src/common/utils/utils';
+import {Tag} from '../src/common/cards/Tag';
 
-describe('GameCards', function() {
-  it('correctly removes projectCardsToRemove', function() {
+describe('GameCards', () => {
+  it('correctly removes projectCardsToRemove', () => {
     // include corporate era
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
@@ -19,7 +20,7 @@ describe('GameCards', function() {
     expect(names).to.not.contain(CardName.CAPITAL);
   });
 
-  it('correctly separates 71 corporate era cards', function() {
+  it('correctly separates 71 corporate era cards', () => {
     // include corporate era
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
@@ -34,7 +35,7 @@ describe('GameCards', function() {
       .to.eq(137);
   });
 
-  it('excludes expansion-specific preludes if those expansions are not selected ', function() {
+  it('excludes expansion-specific preludes if those expansions are not selected ', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       corporateEra: true,
@@ -51,7 +52,7 @@ describe('GameCards', function() {
     });
   });
 
-  it('correctly removes the Merger prelude card if twoCorpsVariant is being used ', function() {
+  it('correctly removes the Merger prelude card if twoCorpsVariant is being used ', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       corporateEra: true,
@@ -63,7 +64,7 @@ describe('GameCards', function() {
     expect(preludeDeck).to.not.contain(CardName.MERGER);
   });
 
-  it('CEOs: Includes/Excludes specific CEOs if those expansions are/are not selected ', function() {
+  it('CEOs: Includes/Excludes specific CEOs if those expansions are/are not selected ', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       ceoExtension: true,
@@ -77,7 +78,7 @@ describe('GameCards', function() {
     expect(ceoNames).not.to.contain(CardName.NEIL); // No Moon
   });
 
-  it('correctly removes banned cards', function() {
+  it('correctly removes banned cards', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       corporateEra: true,
@@ -87,7 +88,7 @@ describe('GameCards', function() {
     expect(names).to.not.contain(CardName.SOLAR_WIND_POWER);
   });
 
-  it('correctly includes the included cards', function() {
+  it('correctly includes the included cards', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       corporateEra: true,
@@ -97,7 +98,7 @@ describe('GameCards', function() {
     expect(names).to.contain(CardName.VENUSIAN_INSECTS);
   });
 
-  it('should not include the included cards in the standard projects', function() {
+  it('should not include the included cards in the standard projects', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       corporateEra: true,
@@ -107,7 +108,7 @@ describe('GameCards', function() {
     expect(names).to.not.contain(CardName.VENUSIAN_INSECTS);
   });
 
-  it('should not include the included cards in the preludes', function() {
+  it('should not include the included cards in the preludes', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       corporateEra: true,
@@ -117,7 +118,7 @@ describe('GameCards', function() {
     expect(names).to.not.contain(CardName.VENUSIAN_INSECTS);
   });
 
-  it('should not include the included cards in the corporation cards', function() {
+  it('should not include the included cards in the corporation cards', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       corporateEra: true,
@@ -127,7 +128,7 @@ describe('GameCards', function() {
     expect(names).to.not.contain(CardName.VENUSIAN_INSECTS);
   });
 
-  it('should not include corporation cards in the included cards', function() {
+  it('should not include corporation cards in the included cards', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       corporateEra: true,
@@ -137,7 +138,7 @@ describe('GameCards', function() {
     expect(names).to.not.contain(CardName.POINT_LUNA);
   });
 
-  it('should not include prelude cards in the included cards', function() {
+  it('should not include prelude cards in the included cards', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       corporateEra: true,
@@ -147,7 +148,7 @@ describe('GameCards', function() {
     expect(names).to.not.contain(CardName.DONATION);
   });
 
-  it('should not include standard projects in the included cards', function() {
+  it('should not include standard projects in the included cards', () => {
     const gameOptions: GameOptions = {
       ...DEFAULT_GAME_OPTIONS,
       corporateEra: true,
@@ -156,5 +157,43 @@ describe('GameCards', function() {
     const names = new GameCards(gameOptions).getProjectCards().map(toName);
     expect(names).to.not.contain(CardName.GREENERY_STANDARD_PROJECT);
   });
+
+  const getTagsRuns = [
+    {
+      idx: 0,
+      options: {},
+      expected: [Tag.BUILDING, Tag.SPACE, Tag.SCIENCE, Tag.POWER, Tag.EARTH, Tag.JOVIAN, Tag.PLANT, Tag.MICROBE, Tag.ANIMAL, Tag.CITY, Tag.EVENT],
+    }, {
+      idx: 1,
+      options: {preludeExtension: true},
+      expected: [Tag.BUILDING, Tag.SPACE, Tag.SCIENCE, Tag.POWER, Tag.EARTH, Tag.JOVIAN, Tag.PLANT, Tag.MICROBE, Tag.ANIMAL, Tag.CITY, Tag.WILD, Tag.EVENT],
+    }, {
+      idx: 2,
+      options: {venusNextExtension: true},
+      expected: [Tag.BUILDING, Tag.SPACE, Tag.SCIENCE, Tag.POWER, Tag.EARTH, Tag.JOVIAN, Tag.VENUS, Tag.PLANT, Tag.MICROBE, Tag.ANIMAL, Tag.CITY, Tag.EVENT],
+    }, {
+      idx: 3,
+      options: {pathfindersExpansion: true},
+      expected: [Tag.BUILDING, Tag.SPACE, Tag.SCIENCE, Tag.POWER, Tag.EARTH, Tag.JOVIAN, Tag.VENUS, Tag.MARS, Tag.PLANT, Tag.MICROBE, Tag.ANIMAL, Tag.CITY, Tag.WILD, Tag.EVENT, Tag.CLONE],
+    }, {
+      idx: 4,
+      options: {
+        // Play with Pathfinders, but exclude all the Venus cards.
+        pathfindersExpansion: true,
+        bannedCards: [
+          CardName.CULTIVATION_OF_VENUS, CardName.DYSON_SCREENS, CardName.EXPEDITION_TO_THE_SURFACE_VENUS,
+          CardName.FLOATER_URBANISM, CardName.TERRAFORMING_CONTROL_STATION, CardName.THINK_TANK, CardName.VENERA_BASE,
+          CardName.AMBIENT, CardName.ROBIN_HAULINGS,
+        ],
+      },
+      expected: [Tag.BUILDING, Tag.SPACE, Tag.SCIENCE, Tag.POWER, Tag.EARTH, Tag.JOVIAN, Tag.MARS, Tag.PLANT, Tag.MICROBE, Tag.ANIMAL, Tag.CITY, Tag.WILD, Tag.EVENT, Tag.CLONE],
+    },
+  ] as const;
+  for (const run of getTagsRuns) {
+    it('getTags ' + run.idx, () => {
+      const tags = new GameCards({...DEFAULT_GAME_OPTIONS, ...run.options as Partial<GameOptions>}).getTags();
+      expect(tags).deep.eq(run.expected);
+    });
+  }
 });
 

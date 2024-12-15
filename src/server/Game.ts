@@ -67,7 +67,7 @@ import {TheNewSpaceRace} from './cards/pathfinders/TheNewSpaceRace';
 import {CorporationDeck, PreludeDeck, ProjectDeck, CeoDeck} from './cards/Deck';
 import {Logger} from './logs/Logger';
 import {addDays, stringToNumber} from './database/utils';
-import {ALL_TAGS, Tag} from '../common/cards/Tag';
+import {Tag} from '../common/cards/Tag';
 import {IGame, Score} from './IGame';
 import {MarsBoard} from './boards/MarsBoard';
 import {UnderworldData} from './underworld/UnderworldData';
@@ -94,7 +94,7 @@ export function setGameLog(f: () => Array<LogMessage>) {
 export class Game implements IGame, Logger {
   public readonly id: GameId;
   public readonly gameOptions: Readonly<GameOptions>;
-  private players: Array<IPlayer>;
+  private players: ReadonlyArray<IPlayer>;
 
   // Game-level data
   public lastSaveId: number = 0;
@@ -183,7 +183,7 @@ export class Game implements IGame, Logger {
 
   private constructor(
     id: GameId,
-    players: Array<IPlayer>,
+    players: ReadonlyArray<IPlayer>,
     first: IPlayer,
     activePlayer: PlayerId,
     gameOptions: GameOptions,
@@ -192,7 +192,8 @@ export class Game implements IGame, Logger {
     projectDeck: ProjectDeck,
     corporationDeck: CorporationDeck,
     preludeDeck: PreludeDeck,
-    ceoDeck: CeoDeck) {
+    ceoDeck: CeoDeck,
+    tags: ReadonlyArray<Tag>) {
     this.id = id;
     this.gameOptions = {...gameOptions};
     this.players = players;
@@ -219,18 +220,11 @@ export class Game implements IGame, Logger {
     this.preludeDeck = preludeDeck;
     this.ceoDeck = ceoDeck;
     this.board = board;
+    this.tags = tags;
 
     this.players.forEach((player) => {
       player.game = this;
       if (player.isCorporation(CardName.MONS_INSURANCE)) this.monsInsuranceOwner = player.id;
-    });
-
-    this.tags = ALL_TAGS.filter((tag) => {
-      if (tag === Tag.VENUS) return gameOptions.venusNextExtension;
-      if (tag === Tag.MOON) return gameOptions.moonExpansion;
-      if (tag === Tag.MARS) return gameOptions.pathfindersExpansion;
-      if (tag === Tag.CLONE) return gameOptions.pathfindersExpansion;
-      return true;
     });
   }
 
@@ -272,7 +266,7 @@ export class Game implements IGame, Logger {
       players[0].setTerraformRating(14);
     }
 
-    const game = new Game(id, players, firstPlayer, activePlayer, gameOptions, rng, board, projectDeck, corporationDeck, preludeDeck, ceoDeck);
+    const game = new Game(id, players, firstPlayer, activePlayer, gameOptions, rng, board, projectDeck, corporationDeck, preludeDeck, ceoDeck, gameCards.getTags());
     game.spectatorId = spectatorId;
     // This evaluation of created time doesn't match what's stored in the database, but that's fine.
     game.createdTime = new Date();
@@ -447,6 +441,7 @@ export class Game implements IGame, Logger {
       someoneHasRemovedOtherPlayersPlants: this.someoneHasRemovedOtherPlayersPlants,
       spectatorId: this.spectatorId,
       syndicatePirateRaider: this.syndicatePirateRaider,
+      tags: this.tags,
       temperature: this.temperature,
       tradeEmbargo: this.tradeEmbargo,
       underworldData: this.underworldData,
@@ -1575,7 +1570,20 @@ export class Game implements IGame, Logger {
 
     const ceoDeck = CeoDeck.deserialize(d.ceoDeck, rng);
 
-    const game = new Game(d.id, players, first, d.activePlayer, gameOptions, rng, board, projectDeck, corporationDeck, preludeDeck, ceoDeck);
+    const game = new Game(
+      d.id,
+      players,
+      first,
+      d.activePlayer,
+      gameOptions,
+      rng,
+      board,
+      projectDeck,
+      corporationDeck,
+      preludeDeck,
+      ceoDeck,
+      // TODO(kberg): Remove ?? by 2025-01-15
+      d.tags ?? new GameCards(gameOptions).getTags());
     game.resettable = true;
     game.spectatorId = d.spectatorId;
     game.createdTime = new Date(d.createdTimeMs);
@@ -1667,6 +1675,7 @@ export class Game implements IGame, Logger {
     game.tradeEmbargo = d.tradeEmbargo ?? false;
     game.beholdTheEmperor = d.beholdTheEmperor ?? false;
     game.globalsPerGeneration = d.globalsPerGeneration;
+
     // Still in Draft or Research of generation 1
     if (game.generation === 1 && players.some((p) => p.corporations.length === 0)) {
       if (game.phase === Phase.INITIALDRAFTING) {
