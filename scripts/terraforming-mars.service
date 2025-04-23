@@ -1,0 +1,18 @@
+[Unit]
+Description=Terraforming Mars
+After=network.target
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+WorkingDirectory=/data/0/terramars/git/terraforming-mars
+ExecStart=/usr/bin/npm run start
+User=terramars
+Group=terramars
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=terramars
+
+[Install]
+WantedBy=multi-user.target
