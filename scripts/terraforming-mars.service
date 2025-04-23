@@ -1,6 +1,7 @@
 [Unit]
 Description=Terraforming Mars
 After=network.target
+Requires=postgresql@15-main.service
 
 [Service]
 Type=simple
